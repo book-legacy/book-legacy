@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - Bookstore</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<script src="login.js"></script>
+<body>
+
+    <header>
+        <button onclick="location.href= 'index.html'"
+        style="border: none; background: none; cursor: pointer; font-size: 20px; user-select: none;">
+            <img src="placeholder.svg" alt="BookLegacy" width="150" height="40"/>
+        </button>
+        <form id="search-form" class="search-form">
+            <input type="text" id="search-query" placeholder="책 제목 검색" />
+            <button type="submit" class="button">검색</button>
+        </form>
+        <div id="search-results"></div>
+        <script src="search.js"></script> <!-- JavaScript 파일 연결 -->    
+        <div class="flex">
+            <span id= userID-display></span>
+            <button id="login-logout-button" class="button outline">로그인</button>
+            <button class="button outline" onclick= "window.open('upload.html', '_blank')">책 업로드</button>
+            <button class="button outline" onclick= "window.location.href = 'cart.html'">장바구니</button>
+            <button class="button">도움말</button>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li>베스트</li>
+            <li>전공서적</li>
+            <li>교양서적</li>
+            <li>참고서적</li>
+            <li>일반서적</li>
+        </ul>
+        <script>
+            const bookListButtons = document.querySelectorAll("nav ul li");
+
+            bookListButtons.forEach((i) => {
+                i.onclick = () => {
+                    window.location.href = 'uploaded-book-list.html';
+                };
+            });
+        </script>
+    </nav>
+
+    <main>
+        <div class="register-container">
+            <h2>회원가입</h2>
+            <form id="register-form">
+                <label>
+                    <input id="name" placeholder="이름 입력" required />
+                </label>
+                <label>
+                    <input id="stdnum" placeholder="학번 입력" required />
+                </label>
+                <label>
+                    <input id="userID" placeholder="아이디 입력" required />
+                </label>
+                <label> 
+                    <input id="password" type="password" placeholder="비밀번호 입력" required />
+                </label>
+                <label>
+                    <input id="password_check" type="password" placeholder="비밀번호 재입력" required />
+                </label>
+                <button type="submit" class="button">회원 가입</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('register-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const stdnum = document.getElementById('stdnum').value;
+            const username = document.getElementById('userID').value;
+            const password = document.getElementById('password').value;
+            const passwordCheck = document.getElementById('password_check').value;
+
+            if (password !== passwordCheck) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name,
+                        stdnum,
+                        username,
+                        password,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert(errorData.error || '회원가입에 실패했습니다.');
+                    return;
+                }
+
+                alert('회원가입이 완료되었습니다.');
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Register error:', error);
+                alert('서버와 통신 중 문제가 발생했습니다.');
+            }
+        });
+
+        document.getElementById('search-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = document.getElementById('search-query').value.trim();
+            if (query) {
+                window.location.href = `book-list.html?query=${encodeURIComponent(query)}`;
+            } else {
+                alert('검색어를 입력하세요.');
+            }
+        });
+    </script>
+</body>
+</html>

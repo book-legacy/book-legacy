@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장바구니 - Bookstore</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<script src="login.js"></script>
+<body>
+
+    <header>
+        <button onclick="location.href= 'index.html'"
+        style="border: none; background: none; cursor: pointer; font-size: 20px; user-select: none;">
+            <img src="placeholder.svg" alt="BookLegacy" width="150" height="40"/>
+        </button>
+        <form id="search-form" class="search-form">
+            <input type="text" id="search-query" placeholder="책 제목 검색" />
+            <button type="submit" class="button">검색</button>
+        </form>
+        <div id="search-results"></div>
+        <script src="search.js"></script> <!-- JavaScript 파일 연결 -->    
+        <div class="flex">
+            <span id= userID-display></span>
+            <button id="login-logout-button" class="button outline">로그인</button>
+            <button class="button outline" onclick= "window.open('upload.html', '_blank')">책 업로드</button>
+            <button class="button outline" onclick= "window.location.href = 'cart.html'">장바구니</button>
+            <button class="button">도움말</button>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li>베스트</li>
+            <li>전공서적</li>
+            <li>교양서적</li>
+            <li>참고서적</li>
+            <li>일반서적</li>
+        </ul>
+        <script>
+            const bookListButtons = document.querySelectorAll("nav ul li");
+
+            bookListButtons.forEach((i) => {
+                i.onclick = () => {
+                    window.location.href = 'uploaded-book-list.html';
+                };
+            });
+        </script>
+    </nav>
+
+    <main>
+        <h1 style= "user-select: none">장바구니</h1>
+        
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('search-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const query = document.getElementById('search-query').value.trim();
+                if (query) {
+                    window.location.href = `book-list.html?query=${encodeURIComponent(query)}`;
+                } else {
+                    alert('검색어를 입력하세요.');
+                }
+            });
+    
+            document.querySelector('.search-container').addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const author = document.getElementById('author').value.trim();
+                const title = document.getElementById('title').value.trim();
+                let query = '';
+                if (author) query = `${author}`;
+                if (title) query = `${title}`;
+                query = query.trim();
+    
+                if (query) {
+                    window.location.href = `book-list.html?query=${encodeURIComponent(query)}`;
+                } else {
+                    alert('검색어를 입력하세요.');
+                }
+            });
+        });
+    </script> 

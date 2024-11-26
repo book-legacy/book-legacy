@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>판매 중인 책 목록 - Bookstore</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<script src="login.js"></script>
+<body>
+
+    <header>
+        <button onclick="location.href= 'index.html'"
+        style="border: none; background: none; cursor: pointer; font-size: 20px; user-select: none;">
+            <img src="placeholder.svg" alt="BookLegacy" width="150" height="40"/>
+        </button>
+        <form id="search-form" class="search-form">
+            <input type="text" id="search-query" placeholder="책 제목 검색" />
+            <button type="submit" class="button">검색</button>
+        </form>
+        <div id="search-results"></div>
+        <script src="search.js"></script> <!-- JavaScript 파일 연결 -->    
+        <div class="flex">
+            <span id= userID-display></span>
+            <button id="login-logout-button" class="button outline">로그인</button>
+            <button class="button outline" onclick= "window.open('upload.html', '_blank')">책 업로드</button>
+            <button class="button outline" onclick= "window.location.href = 'cart.html'">장바구니</button>
+            <button class="button">도움말</button>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li>베스트</li>
+            <li>전공서적</li>
+            <li>교양서적</li>
+            <li>참고서적</li>
+            <li>일반서적</li>
+        </ul>
+        <script>
+            const bookListButtons = document.querySelectorAll("nav ul li");
+
+            bookListButtons.forEach((i) => {
+                i.onclick = () => {
+                    window.location.href = 'uploaded-book-list.html';
+                };
+            });
+        </script>
+    </nav>
+
+    
+    
+    <main>
+        <section>
+            <form id="upload-search-form" class="search-form">
+                <input type="text" id="upload-search-query" placeholder="업로드된 책 검색" />
+                <button type="submit" class="button">검색</button>
+            </form>
+        </section>
+        <h1>거래중인 책 목록</h1>
+        <div id="upload-search-results" class="book-grid">
+            <!-- 업로드된 책 검색 결과 표시 -->
+        </div>
+        <div id="no-books-message" style="text-align: center; margin-top: 20px; font-size: 16px; color: gray; display: none;">
+            현재 거래 중인 책이 없습니다.
+        </div>
+    </main>
+
+    <script>
+        async function fetchPosts() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/posts');
+                if (response.ok) {
+                    const posts = await response.json();
+                    const bookGrid = document.querySelector('.book-grid');
+                    bookGrid.innerHTML = ''; // 기존 게시글 초기화
+
+                    posts.forEach(post => {
+                        const bookCard = document.createElement('div');
+                        bookCard.classList.add('book-card');
+                        bookCard.innerHTML = `
+                        <img src="${post.image}" alt="${post.title}" class="book-image">
+                        <div class="book-info">
+                            <p class="book-title">${post.title}</p>
+                            <p class="book-author">${post.author}</p>
+                            <p class="book-price">사용자 가격: ${post.price || '정보 없음'}원</p>
+                            <p class="book-price">네이버 최저가: ${post.naver_price || '정보 없음'}원</p>
+                            <div class="book-actions">
+                                <button class="wishlist-btn" aria-label="찜하기">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                    </svg>
+                                </button>
+                                <button class="button outline" onclick="window.location.href = 'cart.html'">장바구니</button>
+                                <button class="button outline purchase-button" data-title="${post.title}" 
+                                        data-author="${post.author}" data-price="${post.price}" 
+                                        data-image="${post.image}" data-naver-price="${post.naver_price}">
+                                    구매하기
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                        bookGrid.appendChild(bookCard);
+                        
+                    });
+                    const purchaseButtons = document.querySelectorAll('.purchase-button');
+                    purchaseButtons.forEach((button) => {
+                        button.addEventListener('click', () => {
+                            const title = encodeURIComponent(button.dataset.title);
+                            const author = encodeURIComponent(button.dataset.author);
+                            const price = encodeURIComponent(button.dataset.price);
+                            const image = encodeURIComponent(button.dataset.image);
+                            const naverPrice = encodeURIComponent(button.dataset.naverPrice); // 네이버 최저가 추가
+
+                            // purchase.html로 이동하며 데이터 전달
+                            window.location.href = `purchase.html?title=${title}&author=${author}&price=${price}&image=${image}&naver_price=${naverPrice}`;
+                        });
+                    });
+                } else {
+                    console.error("서버 응답 오류:", response.status);
+                }
+            } catch (error) {
+                console.error("네트워크 오류:", error);
+            }
+        }
+
+        async function searchUploadedBooks(query) {
+            const bookGrid = document.getElementById('upload-search-results');
+            const noBooksMessage = document.getElementById('no-books-message');
+            try {
+                const response = await fetch('http://127.0.0.1:5000/posts'); // 업로드된 책 데이터 가져오기
+                if (response.ok) {
+                    const posts = await response.json();
+                    const filteredBooks = posts.filter(book => book.title.includes(query));
+                    bookGrid.innerHTML = ''; // 기존 검색 결과 초기화
+
+                    if (filteredBooks.length === 0) {
+                        noBooksMessage.style.display = 'block'; // "현재 거래 중인 책이 없습니다." 표시
+                    } else {
+                        noBooksMessage.style.display = 'none'; // 메시지 숨기기
+                        filteredBooks.forEach(book => {
+                            const bookCard = document.createElement('div');
+                            bookCard.classList.add('book-card');
+                            bookCard.innerHTML = `
+                                <img src="${book.image}" alt="${book.title}" class="book-image">
+                                <div class="book-info">
+                                    <p class="book-title">${book.title}</p>
+                                    <p class="book-author">${book.author}</p>
+                                    <p class="book-price">사용자 가격: ${book.price || '정보 없음'}원</p>
+                                    <p class="book-price">네이버 최저가: ${post.naver_price || '정보 없음'}원</p>
+                                </div>
+                            `;
+                            bookGrid.appendChild(bookCard);
+                        });
+                    }
+                } else {
+                    console.error("서버 응답 오류:", response.status);
+                }
+            } catch (error) {
+                console.error("네트워크 오류:", error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPosts();
+
+            const uploadSearchForm = document.getElementById('upload-search-form');
+            uploadSearchForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const query = document.getElementById('upload-search-query').value.trim();
+                if (query) {
+                    await searchUploadedBooks(query);
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('search-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const query = document.getElementById('search-query').value.trim();
+                if (query) {
+                    window.location.href = `book-list.html?query=${encodeURIComponent(query)}`;
+                } else {
+                    alert('검색어를 입력하세요.');
+                }
+            });
+    
+            document.querySelector('.search-container').addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                const author = document.getElementById('author').value.trim();
+                const title = document.getElementById('title').value.trim();
+                let query = '';
+                if (author) query = `${author}`;
+                if (title) query = `${title}`;
+                query = query.trim();
+    
+                if (query) {
+                    window.location.href = `book-list.html?query=${encodeURIComponent(query)}`;
+                } else {
+                    alert('검색어를 입력하세요.');
+                }
+            });
+        });
+    </script> 
+</body>
+</html>
